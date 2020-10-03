@@ -1,7 +1,6 @@
 import tensorflow as tf
 from transformers.positional_embedding import positional_encoding
 from transformers.layers import EncoderLayer, DecoderLayer
-from transformers.utils import create_masks
 # -------- to load embedding matrix in encoder and decoder ------------
 # self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim, 
 # embeddings_initializer=tf.keras.initializers.Constant(embedding_matrix),
@@ -59,7 +58,7 @@ class Decoder(tf.keras.layers.Layer):
                         for _ in range(num_layers)]
         self.dropout = tf.keras.layers.Dropout(rate)
     
-    def call(self, x, enc_output, training, 
+    def call(self, x, enc_output, training,
            look_ahead_mask, padding_mask):
 
         seq_len = tf.shape(x)[1]
@@ -95,9 +94,8 @@ class Transformer(tf.keras.Model):
 
         self.final_layer = tf.keras.layers.Dense(target_vocab_size)
         
-    def call(self, inp, tar, training):
-
-        enc_padding_mask, look_ahead_mask, dec_padding_mask = create_masks(inp, tar)
+    def call(self, inp, tar, training, enc_padding_mask, 
+            look_ahead_mask, dec_padding_mask):
 
         enc_output = self.encoder(inp, training, enc_padding_mask)  # (batch_size, inp_seq_len, d_model)
         
