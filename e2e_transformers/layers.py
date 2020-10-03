@@ -1,6 +1,6 @@
 import tensorflow as tf
-from transformers.attention import MultiHeadAttention
-from transformers.positional_embedding import positional_encoding
+from e2e_transformers.attention import MultiHeadAttention
+from e2e_transformers.positional_embedding import positional_encoding
 
 
 class EncoderLayer(tf.keras.layers.Layer):

@@ -1,5 +1,5 @@
 import tensorflow as tf
-from transformers.mask import create_padding_mask, create_look_ahead_mask
+from e2e_transformers.mask import create_padding_mask, create_look_ahead_mask
 
 loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
     from_logits=True, reduction='none')
