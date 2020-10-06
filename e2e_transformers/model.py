@@ -1,6 +1,7 @@
 import tensorflow as tf
 from e2e_transformers.positional_embedding import positional_encoding
 from e2e_transformers.layers import EncoderLayer, DecoderLayer
+import numpy as np
 # -------- to load embedding matrix in encoder and decoder ------------
 # self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim, 
 # embeddings_initializer=tf.keras.initializers.Constant(embedding_matrix),
@@ -18,8 +19,8 @@ class Encoder(tf.keras.layers.Layer):
         
         self.embedding = tf.keras.layers.Embedding(input_vocab_size, d_model, 
                         embeddings_initializer=tf.keras.initializers.Constant(embedding_mat))
-        self.pos_encoding = positional_encoding(maximum_position_encoding, 
-                                                self.d_model)
+        # self.pos_encoding = positional_encoding(maximum_position_encoding, 
+        #                                         self.d_model)
         
         
         self.enc_layers = [EncoderLayer(d_model, num_heads, dff, rate) 
@@ -49,13 +50,14 @@ class Encoder(tf.keras.layers.Layer):
 
 class Decoder(tf.keras.layers.Layer):
     def __init__(self, num_layers, d_model, num_heads, dff, target_vocab_size,
-               maximum_position_encoding, rate=0.1):
+               maximum_position_encoding, embedding_mat, rate=0.1):
         super(Decoder, self).__init__()
 
         self.d_model = d_model
         self.num_layers = num_layers
         
-        self.embedding = tf.keras.layers.Embedding(target_vocab_size, d_model)
+        self.embedding = tf.keras.layers.Embedding(target_vocab_size, d_model, 
+                        embeddings_initializer=tf.keras.initializers.Constant(embedding_mat))
         self.pos_encoding = positional_encoding(maximum_position_encoding, d_model)
         
         self.dec_layers = [DecoderLayer(d_model, num_heads, dff, rate) 
@@ -70,7 +72,7 @@ class Decoder(tf.keras.layers.Layer):
         
         x = self.embedding(x)  # (batch_size, target_seq_len, d_model)
         x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
-        x += self.pos_encoding[:, :seq_len, :]
+        x += self.pos_encoding[:, :seq_len, :] 
         
         x = self.dropout(x, training=training)
 
@@ -87,16 +89,18 @@ class Decoder(tf.keras.layers.Layer):
 
 class E2ETransformer(tf.keras.Model):
     def __init__(self, num_enc_layers, num_dec_layers, d_model, num_heads, dff, input_vocab_size, 
-               target_vocab_size, pe_input, pe_target, embedding_mat, rate=0.1):
+               target_vocab_size, pe_input, pe_target, embedding_mat, opt, rate=0.1):
         super(E2ETransformer, self).__init__()
 
         self.encoder = Encoder(num_enc_layers, d_model, num_heads, dff, 
                             input_vocab_size, pe_input, embedding_mat, rate)
 
         self.decoder = Decoder(num_dec_layers, d_model, num_heads, dff, 
-                            target_vocab_size, pe_target, rate)
+                            target_vocab_size, pe_target, embedding_mat, rate)
 
         self.final_layer = tf.keras.layers.Dense(target_vocab_size)
+
+        self.opt = opt
         
     def call(self, inp, slot_inp, tar, training, enc_padding_mask, 
             look_ahead_mask, dec_padding_mask):
@@ -110,3 +114,27 @@ class E2ETransformer(tf.keras.Model):
         final_output = self.final_layer(dec_output)  # (batch_size, tar_seq_len, target_vocab_size)
         
         return final_output, attention_weights
+
+    def get_config(self):
+        return self.opt
+    
+    @classmethod
+    def from_config(self, opt):
+
+        embedding_weight = np.load(opt.embedding)
+        vocab_size, d_model = embedding_weight.shape
+
+        return E2ETransformer(
+            num_enc_layers=opt.n_enc_layers,
+            num_dec_layers=opt.n_dec_layers,
+            d_model=d_model,
+            num_heads=opt.n_heads,
+            dff=opt.d_inner_hid,
+            input_vocab_size=vocab_size,
+            target_vocab_size=vocab_size,
+            pe_input=32,
+            pe_target=100,
+            embedding_mat=embedding_weight,
+            opt=opt,
+            rate=opt.dropout
+        )

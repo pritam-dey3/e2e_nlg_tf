@@ -4,6 +4,13 @@ import re
 import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+
+tokenizer = AutoTokenizer.from_pretrained("t5-small")
+
+special_tokens = {'additional_special_tokens': ['<area>', '<eatType>', '<food>', '<near>',                                                      '<name>', '<customer rating>', '<priceRange>',                                                   '<familyFriendly>', '<notfamilyFriendly>',                                                       '<cr_slot>', '<pr_slot>', '<sos>']}
+tokenizer.add_special_tokens(special_tokens)
+
+
 def get_slot_value_dict(mr):
     slot_value_pat = re.compile(r'(?:\ *)([a-zA-Z ]+)(\[[\w£\- ]+\],*)')
     return {'<' + m.group(1) + '>': re.sub(r'\]', '', m.group(2)[1:-1]) for m in re.finditer(slot_value_pat, mr)}
@@ -56,22 +63,18 @@ def preprocessing_py_func(mr, text):
     return sent, slot_sent, label_text   
 
 
-train_data = tf.data.experimental.CsvDataset(filenames='cleaned-data/train-fixed.no-ol.csv', 
-                                record_defaults=[tf.string, tf.string],
-                                header=True,
-                                select_cols=[0, 1])
+# train_data = tf.data.experimental.CsvDataset(filenames='cleaned-data/train-fixed.no-ol.csv', 
+#                                 record_defaults=[tf.string, tf.string],
+#                                 header=True,
+#                                 select_cols=[0, 1])
 
-tokenizer = AutoTokenizer.from_pretrained("t5-small")
 
-special_tokens = {'additional_special_tokens': ['<area>', '<eatType>', '<food>', '<near>',                                                      '<name>', '<customer rating>', '<priceRange>',                                                   '<familyFriendly>', '<notfamilyFriendly>',                                                       '<cr_slot>', '<pr_slot>', '<sos>']}
-tokenizer.add_special_tokens(special_tokens)
+# train_data = train_data.map(preprocessing_py_func).shuffle(buffer_size=15).batch(2).prefetch(1)
 
-train_data = train_data.map(preprocessing_py_func).shuffle(buffer_size=15).batch(2).prefetch(1)
-
-def show():
-    for i, v in enumerate(train_data):
-        print(tokenizer.decode(v[0][0, :]))
-        print(tokenizer.decode(v[1][0, :]))
-        print(tokenizer.decode(v[2][0, :]))
-        if i == 1:
-            break
+# def show():
+#     for i, v in enumerate(train_data):
+#         print(tokenizer.decode(v[0][0, :]))
+#         print(tokenizer.decode(v[1][0, :]))
+#         print(tokenizer.decode(v[2][0, :]))
+#         if i == 1:
+#             break
