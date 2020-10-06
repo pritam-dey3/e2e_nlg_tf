@@ -129,6 +129,8 @@ def main():
     parser.add_argument('-dropout', type=float, default=0.1)
     parser.add_argument('-buffer', type=int, default=20000)
 
+    parser.add_argument('-train', action="store_true")
+
 
     opt = parser.parse_args()
 
@@ -160,8 +162,10 @@ def main():
     #========= Loading Dataset =========#
     train_data = prepare_data(opt)
 
-    
-    train(train_data, optimizer, opt, ckpt_manager)
+    if opt.train:
+        train(train_data, optimizer, opt, ckpt_manager)
+    else:
+        print(e2e_model.opt)
 
 
 

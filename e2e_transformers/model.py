@@ -102,7 +102,7 @@ class E2ETransformer(tf.keras.Model):
 
         self.opt = opt
         
-    def call(self, inp, slot_inp, tar, training, enc_padding_mask, 
+    def __call__(self, inp, slot_inp, tar, training, enc_padding_mask, 
             look_ahead_mask, dec_padding_mask):
 
         enc_output = self.encoder(inp, slot_inp, training, enc_padding_mask)  # (batch_size, inp_seq_len, d_model)
