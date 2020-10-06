@@ -3,3 +3,4 @@
 __pycache__
 temp.py
 checkpoints
+dummy_embed.npy
