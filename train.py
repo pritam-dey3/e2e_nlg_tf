@@ -118,7 +118,7 @@ def main():
 
     parser.add_argument('-embedding', type=str, default='t5_extended_embed.npy')
 
-    parser.add_argument('-n_heads', type=int, default=5)
+    parser.add_argument('-n_heads', type=int, default=4)
     parser.add_argument('-n_enc_layers', type=int, default=3)
     parser.add_argument('-n_dec_layers', type=int, default=5)
     parser.add_argument('-max_len', type=int, default=100)
