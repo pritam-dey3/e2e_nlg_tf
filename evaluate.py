@@ -96,7 +96,7 @@ def evaluate(inp, slot_inp):
 
         # predictions.shape == (batch_size, seq_len, vocab_size)
         predictions, attention_weights = e2e_model(inp, slot_inp, output, 
-                                    True, 
+                                    False, 
                                     enc_padding_mask, 
                                     combined_mask, 
                                     dec_padding_mask)
