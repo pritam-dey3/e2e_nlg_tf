@@ -118,9 +118,9 @@ def main():
 
     parser.add_argument('-embedding', type=str, default='t5_extended_embed.npy')
 
-    parser.add_argument('-n_heads', type=int, default=8)
+    parser.add_argument('-n_heads', type=int, default=5)
     parser.add_argument('-n_enc_layers', type=int, default=3)
-    parser.add_argument('-n_dec_layers', type=int, default=6)
+    parser.add_argument('-n_dec_layers', type=int, default=5)
     parser.add_argument('-max_len', type=int, default=100)
 
     parser.add_argument('-warmup','--n_warmup_steps', type=int, default=4000)
@@ -129,7 +129,6 @@ def main():
     parser.add_argument('-dropout', type=float, default=0.1)
     parser.add_argument('-buffer', type=int, default=20000)
 
-    parser.add_argument('-train', action="store_true")
 
 
     opt = parser.parse_args()
@@ -162,10 +161,9 @@ def main():
     #========= Loading Dataset =========#
     train_data = prepare_data(opt)
 
-    if opt.train:
-        train(train_data, optimizer, opt, ckpt_manager)
-    else:
-        print(e2e_model.opt)
+
+    train(train_data, optimizer, opt, ckpt_manager)
+
 
 
 
