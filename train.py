@@ -128,7 +128,7 @@ def main():
 
     parser.add_argument('-dropout', type=float, default=0.1)
     parser.add_argument('-buffer', type=int, default=20000)
-    parser.add_argument("-new_opt", type=bool)
+    parser.add_argument("-new_opt", type=bool, action="store_true")
 
 
     opt = parser.parse_args()
