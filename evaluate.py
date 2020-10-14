@@ -11,6 +11,7 @@ from e2e_transformers.model import E2ETransformer
 from e2e_transformers.lr_scheduler import CustomSchedule
 from e2e_transformers.utils import create_masks
 from data_preprocessing import get_slot_value_dict
+from data_preprocessing import preprocessing_py_func
 
 parser = argparse.ArgumentParser()
 
@@ -113,15 +114,9 @@ def preprocessing(mr):
     return sent, slot_sent, sv_dict
 
 
-
 def evaluate(inp, slot_inp):
-
-    # inp sentence is portuguese, hence adding the start and end token
-
-    # as the target is english, the first word to the transformer should be the
-    # english start token.
-    decoder_input = [tokenizer.convert_tokens_to_ids('<sos>')]
-    output = tf.expand_dims(decoder_input, 0)
+    decoder_input = [tokenizer.convert_tokens_to_ids('<sos>')] * opt.batch_size
+    output = tf.expand_dims(decoder_input, 1)
         
     for i in range(100):
         enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
@@ -139,50 +134,50 @@ def evaluate(inp, slot_inp):
 
         predicted_id = tf.cast(tf.argmax(predictions, axis=-1), tf.int32)
         
-        # return the result if the predicted_id is equal to the end token
-        if predicted_id == tokenizer.convert_tokens_to_ids('</s>'):
-            return tf.squeeze(output, axis=0), attention_weights
+        # # return the result if the predicted_id is equal to the end token
+        # if predicted_id == tokenizer.convert_tokens_to_ids('</s>'):
+        #     return tf.squeeze(output, axis=0), attention_weights
         
         # concatentate the predicted_id to the output which is given to the decoder
         # as its input.
         output = tf.concat([output, predicted_id], axis=-1)
 
-    return tf.squeeze(output, axis=0), attention_weights
+    return output, attention_weights
 
 
-def translate(inp, slot_inp, text):
-    result, attention_weights = evaluate(inp, slot_inp)
-    
-    predicted_sentence = tokenizer.decode(result)  
-
-    # print('Input: {}'.format(inp))
-    print('Predicted translation: {}'.format(predicted_sentence))
-    print('Correct translation: {}'.format(tokenizer.decode(tf.squeeze(text, 0))))
 
 
+df = pd.read_csv('cleaned-data/test-fixed.csv', header=0, usecols=[0,1])
+df["pred"] = None
 
 val_data = tf.data.experimental.CsvDataset(filenames='cleaned-data/test-fixed.csv', 
                                 record_defaults=[tf.string, tf.string],
                                 header=True,
                                 select_cols=[0, 1])
+val_data = val_data.map(preprocessing_py_func)\
+        .batch(opt.batch_size)\
+        .prefetch(tf.data.experimental.AUTOTUNE)
 
-df = pd.read_csv('cleaned-data/test-fixed.csv', header=0, usecols=[0,1])
-df["pred"] = None
+data = np.array([[0] * 101])
+for i,v in enumerate(val_data):
+    x = evaluate(v[0], v[1])
+    data = np.vstack((data, x[0].numpy()))
+    break
+np.save('output.npy', data)
 
+# for i in tqdm(range(len(df))):
+#     mr, text, _ = df.iloc[i,:]
+#     sent, slot_sent, sv_dict = preprocessing(mr)
 
-for i in tqdm(range(len(df))):
-    mr, text, _ = df.iloc[i,:]
-    sent, slot_sent, sv_dict = preprocessing(mr)
-
-    result, attention_weights = evaluate(sent, slot_sent)
-    pred = tokenizer.decode(result)
+#     result, attention_weights = evaluate(sent, slot_sent)
+#     pred = tokenizer.decode(result)
     
-    for k in sv_dict.keys():
-        pred = re.sub(k, sv_dict[k], pred)
-    pred = re.sub('<sos>', '', pred)
+#     for k in sv_dict.keys():
+#         pred = re.sub(k, sv_dict[k], pred)
+#     pred = re.sub('<sos>', '', pred)
 
-    df.iloc[i, 2] = pred
+#     df.iloc[i, 2] = pred
 
-df.to_csv('pred_data.csv')
+# df.to_csv('pred_data.csv')
 
 

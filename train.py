@@ -160,6 +160,10 @@ def main():
 
     #========= Loading Dataset =========#
     train_data = prepare_data(opt)
+    if opt.new_opt:
+        learning_rate = CustomSchedule(d_model)
+        optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98, 
+                                     epsilon=1e-9)
 
 
     train(train_data, optimizer, opt, ckpt_manager)
