@@ -37,6 +37,7 @@ parser.add_argument('-pad_idx', type=int, default=0)
 
 parser.add_argument('-dropout', type=float, default=0.1)
 parser.add_argument('-buffer', type=int, default=20000)
+parser.add_argument('-test', action="store_true")
 
 
 opt = parser.parse_args()
@@ -80,38 +81,6 @@ special_tokens = {'additional_special_tokens': ['<area>', '<eatType>', '<food>',
 tokenizer.add_special_tokens(special_tokens)
 
 
-def preprocessing(mr):
-    # mr, text = data
-    # mr = mr.numpy().decode('utf-8'); text = text.numpy().decode('utf-8')
-    sv_dict = get_slot_value_dict(mr)
-    keys = sv_dict.keys()
-    sent = list(keys)
-    slot_sent = ['<pad>'] * len(sent)
-    if '<customer rating>' in keys:
-        cr = tokenizer.tokenize(sv_dict['<customer rating>'])
-        sent += cr
-        slot_sent += ['<cr_slot>'] * len(cr)
-    if '<priceRange>' in keys:
-        pr = tokenizer.tokenize(sv_dict['<priceRange>'])
-        sent += pr
-        slot_sent += ['<pr_slot>'] * len(pr)
-    if '<familyFriendly>' in keys and (sv_dict['<familyFriendly>'] != 'yes'):
-        sent.remove('<familyFriendly>')
-        sent.insert(0, '<notfamilyFriendly>')
-    sent.insert(0, '<sos>')
-    
-    named_entities = ['<area>', '<eatType>', '<food>', '<near>', '<name>']
-    # label_text = '<sos>' + text
-    # for ne in named_entities:
-    #     if ne not in keys:
-    #         continue
-    #     label_text = re.sub(sv_dict[ne], ne, label_text)
-    sent = tokenizer.encode(sent, padding='max_length', max_length=32, return_tensors='tf')
-    slot_sent = tokenizer.encode(slot_sent, padding='max_length', max_length=32, return_tensors='tf')
-    # label_text = tokenizer.encode(label_text, padding='max_length', max_length=100, return_tensors='tf')
-
-        
-    return sent, slot_sent, sv_dict
 
 
 def evaluate(inp, slot_inp):
@@ -159,25 +128,12 @@ val_data = val_data.map(preprocessing_py_func)\
         .prefetch(tf.data.experimental.AUTOTUNE)
 
 data = np.array([[0] * 101])
-for i,v in enumerate(val_data):
+for i,v in tqdm(enumerate(val_data)):
     x = evaluate(v[0], v[1])
     data = np.vstack((data, x[0].numpy()))
-    break
+    if opt.test and i > 4:
+        break
+
 np.save('output.npy', data)
-
-# for i in tqdm(range(len(df))):
-#     mr, text, _ = df.iloc[i,:]
-#     sent, slot_sent, sv_dict = preprocessing(mr)
-
-#     result, attention_weights = evaluate(sent, slot_sent)
-#     pred = tokenizer.decode(result)
-    
-#     for k in sv_dict.keys():
-#         pred = re.sub(k, sv_dict[k], pred)
-#     pred = re.sub('<sos>', '', pred)
-
-#     df.iloc[i, 2] = pred
-
-# df.to_csv('pred_data.csv')
 
 

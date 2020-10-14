@@ -6,3 +6,4 @@ checkpoints
 o_checkpoints
 dummy_embed.npy
 output.npy
+prediction.csv
