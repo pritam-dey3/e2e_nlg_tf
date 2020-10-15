@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from data_preprocessing import get_slot_value_dict
 import re
+from tqdm import tqdm
 
 
 tokenizer = AutoTokenizer.from_pretrained("t5-small")
@@ -42,7 +43,8 @@ def preprocessing(mr):
     return sent, slot_sent, sv_dict
 
 lines = np.array(["mr", "pred", "gold"])
-for i in range(data.shape[0]):
+
+for i in tqdm(range(data.shape[0])):
     mr, text = df.iloc[i,:]
     sent, slot_sent, sv_dict = preprocessing(mr)
     tokens = data[i, :]
