@@ -41,7 +41,7 @@ def preprocessing(mr):
     slot_sent = tokenizer.encode(slot_sent, padding='max_length', max_length=32, return_tensors='tf')
     return sent, slot_sent, sv_dict
 
-lines = ['''"pred", "gold"\n''']
+lines = np.array(["mr", "pred", "gold"])
 for i in range(data.shape[0]):
     mr, text = df.iloc[i,:]
     sent, slot_sent, sv_dict = preprocessing(mr)
@@ -53,9 +53,9 @@ for i in range(data.shape[0]):
     for k in sv_dict.keys():
         pred = re.sub(k, sv_dict[k], pred)
     pred = re.sub('<sos>', '', pred)
+    newline = np.array([sv_dict, pred, text])
 
-    lines.append(f'''"{pred}", "{text}"\n''')
+    lines = np.vstack((lines, newline))
 
 
-with open("prediction.csv", "w+") as f:
-    f.writelines(lines)
+np.save("prediction.npy", lines)
