@@ -84,7 +84,7 @@ tokenizer.add_special_tokens(special_tokens)
 
 
 def evaluate(inp, slot_inp):
-    decoder_input = [tokenizer.convert_tokens_to_ids('<sos>')] * opt.batch_size
+    decoder_input = [tokenizer.convert_tokens_to_ids('<sos>')] * inp.shape[0]
     output = tf.expand_dims(decoder_input, 1)
         
     for i in range(100):
