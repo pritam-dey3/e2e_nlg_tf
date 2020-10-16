@@ -49,7 +49,7 @@ for i in tqdm(range(data.shape[0])):
     sent, slot_sent, sv_dict = preprocessing(mr)
     tokens = data[i, :]
     endidx = np.where(tokens == end_token)
-    if endidx[0].shape == (0,): endidx[0] = np.array([100])
+    if endidx[0].shape == (0,): endidx = (np.array([100]), )
 
     pred = tokenizer.decode(tokens[:endidx[0][0]])
 
