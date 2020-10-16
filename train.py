@@ -72,7 +72,7 @@ def train(train_data, optimizer, opt, ckpt_manager):
                 print ('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
                     epoch + 1, batch, train_loss.result(), train_accuracy.result()))
       
-        if (epoch + 1) % 2 == 0:
+        if (epoch + 1) % opt.freq == 0:
             ckpt_save_path = ckpt_manager.save()
             print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
                                                             ckpt_save_path))
@@ -130,6 +130,9 @@ def main():
     parser.add_argument('-buffer', type=int, default=20000)
     parser.add_argument("-new_opt", action="store_true")
 
+    parser.add_argument("-freq", type=int, defalut=5)
+    parser.add_argument("-max_save", type=int, default=2)
+
 
     opt = parser.parse_args()
 
@@ -150,7 +153,7 @@ def main():
     ckpt = tf.train.Checkpoint(e2e_model = e2e_model,
                             optimizer=optimizer)
 
-    ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
+    ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=opt.max_save)
 
     # if a checkpoint exists, restore the latest checkpoint.
     if ckpt_manager.latest_checkpoint:
