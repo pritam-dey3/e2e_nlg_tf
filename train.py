@@ -130,7 +130,7 @@ def main():
     parser.add_argument('-buffer', type=int, default=20000)
     parser.add_argument("-new_opt", action="store_true")
 
-    parser.add_argument("-freq", type=int, defalut=5)
+    parser.add_argument("-freq", type=int, default=5)
     parser.add_argument("-max_save", type=int, default=2)
 
 
