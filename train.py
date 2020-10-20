@@ -131,6 +131,7 @@ def main():
 
     parser.add_argument("-new_opt", action="store_true")
     parser.add_argument("-adam", action="store_true")
+    parser.add_argument("-lr", type=float, default=0.0001)
 
     parser.add_argument("-freq", type=int, default=5)
     parser.add_argument("-max_save", type=int, default=2)
@@ -171,7 +172,7 @@ def main():
         optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98, 
                                      epsilon=1e-9)
     if opt.adam:
-        optimizer = tf.keras.optimizers.Adam(0.001, beta_1=0.9, beta_2=0.98, 
+        optimizer = tf.keras.optimizers.Adam(opt.lr, beta_1=0.9, beta_2=0.98, 
                                      epsilon=1e-9)
 
 
