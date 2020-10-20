@@ -128,7 +128,9 @@ def main():
 
     parser.add_argument('-dropout', type=float, default=0.1)
     parser.add_argument('-buffer', type=int, default=20000)
+
     parser.add_argument("-new_opt", action="store_true")
+    parser.add_argument("-adam", action="store_true")
 
     parser.add_argument("-freq", type=int, default=5)
     parser.add_argument("-max_save", type=int, default=2)
@@ -163,9 +165,13 @@ def main():
 
     #========= Loading Dataset =========#
     train_data = prepare_data(opt)
+
     if opt.new_opt:
         learning_rate = CustomSchedule(d_model)
         optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98, 
+                                     epsilon=1e-9)
+    if opt.adam:
+        optimizer = tf.keras.optimizers.Adam(0.001, beta_1=0.9, beta_2=0.98, 
                                      epsilon=1e-9)
 
 

@@ -115,25 +115,27 @@ def evaluate(inp, slot_inp):
 
 
 
+def main():
+    df = pd.read_csv('cleaned-data/test-fixed.csv', header=0, usecols=[0,1])
+    df["pred"] = None
 
-df = pd.read_csv('cleaned-data/test-fixed.csv', header=0, usecols=[0,1])
-df["pred"] = None
+    val_data = tf.data.experimental.CsvDataset(filenames='cleaned-data/test-fixed.csv', 
+                                    record_defaults=[tf.string, tf.string],
+                                    header=True,
+                                    select_cols=[0, 1])
+    val_data = val_data.map(preprocessing_py_func)\
+            .batch(opt.batch_size)\
+            .prefetch(tf.data.experimental.AUTOTUNE)
 
-val_data = tf.data.experimental.CsvDataset(filenames='cleaned-data/test-fixed.csv', 
-                                record_defaults=[tf.string, tf.string],
-                                header=True,
-                                select_cols=[0, 1])
-val_data = val_data.map(preprocessing_py_func)\
-        .batch(opt.batch_size)\
-        .prefetch(tf.data.experimental.AUTOTUNE)
+    data = np.array([[0] * 101])
+    for i,v in tqdm(enumerate(val_data)):
+        x = evaluate(v[0], v[1])
+        data = np.vstack((data, x[0].numpy()))
+        if opt.test and i > 4:
+            break
 
-data = np.array([[0] * 101])
-for i,v in tqdm(enumerate(val_data)):
-    x = evaluate(v[0], v[1])
-    data = np.vstack((data, x[0].numpy()))
-    if opt.test and i > 4:
-        break
-
-np.save('output.npy', data)
+    np.save('output.npy', data)
 
 
+if __name__ == "main":
+    main()
